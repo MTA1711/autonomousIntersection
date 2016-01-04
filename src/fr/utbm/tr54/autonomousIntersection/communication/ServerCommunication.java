@@ -21,7 +21,7 @@ public class ServerCommunication {
 	final  int tailleBuffer = 20; 
 	final  byte buffer[] = new byte[this.tailleBuffer];
 	
-	private InetAddress localAddress;
+	//private InetAddress localAddress;
 	private InetAddress broadcastAddress;
 	private DatagramSocket socketServer;
 	private InetAddress myAddress;
@@ -35,18 +35,20 @@ public class ServerCommunication {
 		
 		try 
 		{
-			this.localAddress = InetAddress.getLocalHost();
-			this.broadcastAddress = InetAddress.getByName("192.168.43.255"); //$NON-NLS-1$
-			this.myAddress = InetAddress.getByName("192.168.43.189"); //$NON-NLS-1$
+			//this.localAddress = InetAddress.getLocalHost();
+			this.broadcastAddress = InetAddress.getByName("192.168.173.255"); 
+			this.myAddress = InetAddress.getByName("192.168.173.1"); 
 			this.socketServer = new DatagramSocket(this.port);
+			//this.socketServer = new DatagramSocket(this.port, this.myAddress);
 			
-			System.out.println("localAddress "+this.localAddress); //$NON-NLS-1$
-			System.out.println("broadcastAddress "+this.broadcastAddress); //$NON-NLS-1$
+			//System.out.println("localAddress "+this.localAddress);
+			System.out.println("my address "+this.myAddress); 
+			System.out.println("broadcastAddress "+this.broadcastAddress); 
 		} 
 		catch (Exception e) 
 		{
 			// TODO Auto-generated catch block
-			System.out.println("erreur: " + e.getMessage()); //$NON-NLS-1$
+			System.out.println("erreur: " + e.getMessage()); 
 		}
 	}
 	
@@ -56,6 +58,7 @@ public class ServerCommunication {
 	 */
 	public void buidPassingList(){
 		this.passingList.removeAll(this.passingList);
+		if (this.listRequest.size() > 0)
 		this.passingList.add( this.listRequest.get(0) );
 	}
 	
@@ -65,14 +68,14 @@ public class ServerCommunication {
 	 * @return Datagram to send
 	 */
 	public DatagramPacket buildResponse () {
-		String dataToSend =""; //$NON-NLS-1$
+		String dataToSend =""; 
 		int i = 0;
 		for (String d : this.passingList){
 			if ( i == 0){
 				dataToSend += d;
 				i++;
 			}else{
-				dataToSend += "--"+d; //$NON-NLS-1$
+				dataToSend += "--"+d; 
 			}
 		}
 		System.out.println("data sent: " + dataToSend);
@@ -98,7 +101,8 @@ public class ServerCommunication {
 		String[] arrayData = dataString.split("-");			
 		if (arrayData[1].equals("request")){
 			//add robot to listRequest
-			this.listRequest.add(arrayData[0]);
+			index = this.listRequest.indexOf( (arrayData[0]) ); 
+			if (index < 0 )this.listRequest.add(arrayData[0]); //if doesn't exist in listRequest, add it
 		}else if ( arrayData[1].equals("out") ){
 			//remove robot in request list
 			index = this.listRequest.indexOf( (arrayData[0]) );
@@ -115,7 +119,7 @@ public class ServerCommunication {
 		int nbe = 0;
 		int nbReceive = 0;
 		 
-		System.out.println("Begin listenning...\n"); //$NON-NLS-1$
+		System.out.println("Begin listenning...\n"); 
 		
 	    while(true) 
 		{ 
@@ -124,16 +128,16 @@ public class ServerCommunication {
 			
 		    if ( ! data.getAddress().equals(this.myAddress)){
 		    	++nbReceive;
-			    System.out.println("data receive:"+nbReceive); //$NON-NLS-1$
+			    System.out.println("data receive:"+nbReceive); 
 			    this.managePacket(data);
 			    this.buidPassingList();
 				//send broadcast to all robots
 				this.socketServer.send( this.buildResponse() );
 				
 				++nbe;
-			    System.out.println("data sent number: "+nbe); //$NON-NLS-1$
+			    System.out.println("data sent number: "+nbe); 
 			    this.printArrayList(this.listRequest);
-			    System.out.println(""); //$NON-NLS-1$
+			    System.out.println(""); 
 		    }
 		 } 
 	    

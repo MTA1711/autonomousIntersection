@@ -21,8 +21,8 @@ public class Robot extends Thread {
 	@SuppressWarnings("unused")
 	private boolean progress;
 	
-	final long TIME_IN  = 60000 ;
-	final long TIME_OUT = 180000 ;
+	final long TIME_IN  = 5000 ;
+	final long TIME_OUT = 15000 ;
 	/*shared var*/
 	private NumberInt sendRequestIn;
 	private NumberInt sendRequestOut;
@@ -77,7 +77,7 @@ public class Robot extends Thread {
 	}
 	
 	/**
-	 * Permet la rotation du robot sur lui-mÃªme
+	 * Permet la rotation du robot sur lui-même
 	 */
 	public void rotationRobot(){
 		/*this.moteursRobot.moveSpeed(150);
@@ -89,7 +89,7 @@ public class Robot extends Thread {
 	}
 	
 	/**
-	 * ArrÃªte tous les composants du robot
+	 * Arrête tous les composants du robot
 	 */
 	public void shutdown(){
 		this.robotMotors.close();
@@ -99,8 +99,8 @@ public class Robot extends Thread {
 	/**
 	 * Affiche de la distance entre le capteur de position et un obstacle sur le LCD
 	 * @param dist distance entre le capteur de position et un obstacle
-	 * @param x ligne sur l'Ã©cran
-	 * @param y colonne sur l'Ã©cran
+	 * @param x ligne sur l'écran
+	 * @param y colonne sur l'écran
 	 */
 	public static void lcd_print(Float dist,int x,int y){
 		LCD.drawString("distance est : "+dist, x, y); //$NON-NLS-1$
@@ -474,9 +474,11 @@ public class Robot extends Thread {
 							v = (float) (vi * 0.4);
 							if (c == Color.ORANGE ){
 								this.semRequestIn.acquire();
+								LCD.drawString("semRequestIn takes move", 0, 3);
 								this.sendRequestIn.setNum(1);
 								inStockageZone = 1;
 								this.semRequestIn.release();
+								LCD.drawString("semRequestIn releases", 0, 3); 
 							}
 							this.robotMotors.moveSpeed(v);
 							this.robotMotors.moveForward();							
@@ -506,7 +508,12 @@ public class Robot extends Thread {
 						this.semRightToCross.release();
 						b++;
 						s.reset();
-						this.move(s, this.TIME_IN);
+						if (nearBoundary == 1){
+							this.move(s, this.TIME_IN * 2);
+						}else{
+							this.move(s, this.TIME_IN * 3);
+						}
+						
 						this.semRequestOut.acquire();
 						this.sendRequestOut.setNum(1);
 						this.semRequestOut.release();
@@ -525,7 +532,14 @@ public class Robot extends Thread {
 							this.robotMotors.stop();
 							nearBoundary = 1;	
 						}
-						this.robotMotors.stop();						
+						this.robotMotors.stop();
+						LCD.clear(6);
+						LCD.drawString("critical zone", 0, 6); 
+						
+						//send request to server for reception of passingList
+						this.semRequestIn.acquire();
+						this.sendRequestIn.setNum(1);
+						this.semRequestIn.release();
 					}
 					if (k == 0) this.semRightToCross.release();
 					

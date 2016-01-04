@@ -23,7 +23,7 @@ public class RobotCommunication extends Wifi implements Runnable{
 	final  byte buffer[] = new byte[this.tailleBuffer];
 	final  int seuil = 8532; 
 	
-	private InetAddress localAddress;
+	//private InetAddress localAddress;
 	private InetAddress broadcastAddress;	
 	private InetAddress serverAddress;
 	
@@ -48,25 +48,19 @@ public class RobotCommunication extends Wifi implements Runnable{
 		super();
 		try 
 		{
-			this.localAddress = InetAddress.getLocalHost();
-			this.broadcastAddress = InetAddress.getByName("192.168.43.255"); //$NON-NLS-1$
-			this.serverAddress = InetAddress.getByName("192.168.43.121"); //$NON-NLS-1$
-			
+			//this.localAddress = InetAddress.getLocalHost();
+			this.broadcastAddress = InetAddress.getByName("192.168.173.255"); 
+			this.serverAddress = InetAddress.getByName("192.168.173.1"); 
+
 			this.clientSocket = new DatagramSocket(this.port); 
-			
-			LCD.drawString(""+this.localAddress, 0, 0); //$NON-NLS-1$
-			LCD.drawString(""+this.broadcastAddress, 0, 1); //$NON-NLS-1$*
-			
-			/*System.out.println("localAddress "+this.localAddress); //$NON-NLS-1$
-			System.out.println("broadcastAddress "+this.broadcastAddress); //$NON-NLS-1$*/
-			
-			this.nameRobot = new String(name);
+			//LCD.drawString(""+this.localAddress, 0, 0); 
+			LCD.drawString(""+this.broadcastAddress, 0, 0); 
 		} 
 		catch (Exception e) 
 		{
-			//LCD.drawString("erreur: " + e.getMessage(), 0, 0); //$NON-NLS-1$
-			//System.out.println("erreur: " + e.getMessage()); //$NON-NLS-1$
+			LCD.drawString("erreur: " + e.getMessage(), 0, 0); 
 		}
+		this.nameRobot = new String(name);
 	}
 	
 	/**
@@ -82,19 +76,18 @@ public class RobotCommunication extends Wifi implements Runnable{
 		super();
 		try 
 		{
-			this.localAddress = InetAddress.getLocalHost();
-			this.broadcastAddress = InetAddress.getByName("192.168.43.255"); //$NON-NLS-1$
-			this.serverAddress = InetAddress.getByName("192.168.43.121"); //$NON-NLS-1$
+			//this.localAddress = InetAddress.getLocalHost();
+			this.broadcastAddress = InetAddress.getByName("192.168.173.255"); 
+			this.serverAddress = InetAddress.getByName("192.168.173.1"); 
 			this.clientSocket = new DatagramSocket(this.port); 
 			
-			LCD.drawString(""+this.localAddress, 0, 0); //$NON-NLS-1$
-			LCD.drawString(""+this.broadcastAddress, 0, 1); //$NON-NLS-1$*
-
-			this.nameRobot = new String(name);
+			//LCD.drawString(""+this.localAddress, 0, 0); 
+			LCD.drawString(""+this.serverAddress, 0, 1); 
 		} 
 		catch (Exception e) {
 			e.printStackTrace();
 		}
+		this.nameRobot = new String(name);
 		this.semRequestIn = semRequestIn;
 		this.semRequestOut = semRequestOut;
 		this.semRightToCross = semRightToCross;
@@ -113,14 +106,14 @@ public class RobotCommunication extends Wifi implements Runnable{
 	 */
 	
 	public void clientSendData( String data, int nbe) throws IOException{
-		//String envoi = "Robot1-request"; //$NON-NLS-1$
+		//String envoi = "Robot1-request"; 
         byte[] buffer2 = data.getBytes(); 
         DatagramPacket packet = new DatagramPacket(buffer2,buffer2.length, this.serverAddress, this.port); 
         packet.setData(buffer2);
     
         this.clientSocket.send(packet);
-        LCD.drawString("data send "+nbe, 0, 3  ); //$NON-NLS-1$
-       // System.out.println("data send "+nbe); //$NON-NLS-1$
+        LCD.drawString("data send "+nbe, 0, 3  ); 
+        //System.out.println("data send "+nbe); 
         //this.clientSocket.close();
 	}
 	
@@ -130,13 +123,12 @@ public class RobotCommunication extends Wifi implements Runnable{
 	 * @throws IOException 
 	 */
 	public boolean communicationWithServer() throws IOException{
-		//this.clientSocket.
 		DatagramPacket data = new DatagramPacket(this.buffer,this.buffer.length); 
 	    this.clientSocket.receive(data);
 	    boolean b = managePacket(data);
 	    
-	    LCD.clear(4);
-	    LCD.drawString("pass: "+b, 0, 4  ); //$NON-NLS-1$
+	    LCD.clear(7);
+	    LCD.drawString("pass: "+b, 0, 7  ); 
 	    //System.out.println(b);
 	    return b;
 	}
@@ -155,14 +147,13 @@ public class RobotCommunication extends Wifi implements Runnable{
 		dataString = dataString.substring(0, data.getLength());
 		//System.out.println("----> "+dataString);
 		String[] arrayData = dataString.split("--");
-		
+		//looking for the name of robot in the passing list
 		while (i < arrayData.length  && find == false){
 			if( arrayData[i].equals(this.nameRobot) ){
 				find = true;
 			}
 			i++;
-		}
-		
+		}	
 		return find;	
 	}
 
@@ -241,34 +232,70 @@ public class RobotCommunication extends Wifi implements Runnable{
 		int firstIf = 0;
 		while (true){
 			firstIf = 0;
+			int a = 0;
+			int b = 0;
 			try {
 				this.semRequestIn.acquire();
+				LCD.clear(3);
+				LCD.drawString("sem In takes com", 0, 3); 
 				if (this.sendRequestIn.getNum() == 1){
 					//sent to the server a inRequest
 					this.clientSendData(this.getNameRobot()+"-request", ++nbPacket);			
 					this.sendRequestIn.setNum(0);
+					this.semRequestIn.release();
+					a++;
+					
 					firstIf++;
+					
+					//receive passing list from server
+					boolean cross = false;
+					cross = this.communicationWithServer();
+					this.semRightToCross.acquire();
+					LCD.drawString("sem RTC takes com", 0, 5); 
+					if ( cross ){
+						this.rightToCross.setNum(1);
+					}else{
+						this.rightToCross.setNum(0);
+					}
+					this.semRightToCross.release();
+					LCD.drawString("sem RTC rel com", 0, 5); 	
 				}
-				this.semRequestIn.release();
+				
+				if (a ==  0) this.semRequestIn.release();
+				LCD.clear(3);
+				LCD.drawString("sem In rel", 0, 3); 
+				
 				if (firstIf == 0){
 					this.semRequestOut.acquire();
+					LCD.clear(4);
+					LCD.drawString("sem Out takes com", 0, 4); 
 					if (this.sendRequestOut.getNum() == 1){
-						//sent to the server a outRequest
+						//sent to the server a outRequest						
 						this.clientSendData(this.getNameRobot()+"-out", ++nbPacket);
 						this.sendRequestOut.setNum(0);
+						this.semRequestOut.release();
+						b++;
+						
+						//receive passing list from server
+						boolean cross = false;
+						cross = this.communicationWithServer();
+						LCD.clear(5);
+						this.semRightToCross.acquire();
+						LCD.drawString("sem RTC takes com", 0, 5); 
+						if ( cross ){
+							this.rightToCross.setNum(1);
+						}else{
+							this.rightToCross.setNum(0);
+						}
+						this.semRightToCross.release();
+						LCD.clear(5);
+						LCD.drawString("sem RTC rel com", 0, 5); 
 					}
-					this.semRequestOut.release();
+					if (b==0)this.semRequestOut.release();
+					LCD.clear(4);
+					LCD.drawString("sem Out rel com", 0, 4); 				
 				}
-				//receive passing list from server
-				boolean cross = false;
-				cross = this.communicationWithServer();
-				this.semRightToCross.acquire();
-				if ( cross ){
-					this.rightToCross.setNum(1);
-				}else{
-					this.rightToCross.setNum(0);
-				}
-				this.semRightToCross.release();
+				
 			} catch (Exception e) {e.printStackTrace();}
 		}
 	}
