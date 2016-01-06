@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 
 /**
+ * This class contains functions  used to write  a measure in a file
  * @author Achille
  *
  */
@@ -16,7 +17,6 @@ public class Utils {
 	 * @param dist string to write
 	 * @param file name of file
 	 */
-	@SuppressWarnings("resource")
 	public static void sauvegardeMesure(String dist,String file){
 		File f = new File (file);
 		try
@@ -37,7 +37,6 @@ public class Utils {
 	 * @param dist string to write
 	 * @param file name of file
 	 */
-	@SuppressWarnings("resource")
 	public static void sauvegardeMesure(Float dist, String file){
 		File f = new File (file);
 		try

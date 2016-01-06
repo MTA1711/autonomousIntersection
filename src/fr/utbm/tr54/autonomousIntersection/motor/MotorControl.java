@@ -5,8 +5,9 @@ import lejos.hardware.port.MotorPort;
 import lejos.utility.Delay;
 
 /**
+ * Manage robot's motors
  * @author Achille
- * Manage motors's of robot
+ * 
  */
 public class MotorControl {
 	private  EV3LargeRegulatedMotor motorC;
@@ -21,7 +22,7 @@ public class MotorControl {
 
 	}
 	/**
-	 * move forward robot
+	 * move forward the robot
 	 */
 	public void moveForward(){
 		/* Motor forward */
@@ -223,5 +224,19 @@ public class MotorControl {
 		this.moveForward();
 		Delay.msDelay( (300) );
 		this.stop();
+	}
+	
+	/**
+	 * Return the average of tachometer
+	 */
+	public int getTachoCount(){
+		return (this.motorB.getTachoCount() + this.motorC.getTachoCount()) / 2;
+	}
+	/**
+	 * Reset value of tachometer
+	 */
+	public void resetTachoCount(){
+		this.motorB.resetTachoCount();
+		this.motorC.resetTachoCount();
 	}
 }

@@ -10,7 +10,8 @@ import fr.utbm.tr54.autonomousIntersection.sensor.Sensor;
 import fr.utbm.tr54.autonomousIntersection.util.NumberInt;
 import fr.utbm.tr54.autonomousIntersection.util.Utils;
 /**
- * Classe qui modelise un robot
+ * This is an old version of the class RobotWifi.
+ * This class manages the robot's movement 
  * @author Achille
  */
 public class Robot extends Thread {
@@ -67,8 +68,8 @@ public class Robot extends Thread {
 	}
 	
 	/**
-	 * 
-	 * @return La vitesse maximale du robot
+	 * get Maximal motor's speed
+	 * @return Maximal motor's speed
 	 */
 	float getSpeedMax(){
 		float speedMax;
@@ -77,37 +78,16 @@ public class Robot extends Thread {
 	}
 	
 	/**
-	 * Permet la rotation du robot sur lui-même
-	 */
-	public void rotationRobot(){
-		/*this.moteursRobot.moveSpeed(150);
-		this.moteursRobot.rotation(720);*/
-//		/*this.moteursRobot.rotation(100, 2);*/
-		/*this.moteursRobot.rotationLeft(-100, 1);*/
-		this.robotMotors.rotationForwardRight(100,2);
-		this.robotMotors.rotationBackwardRight(100, 2);
-	}
-	
-	/**
-	 * Arrête tous les composants du robot
+	 * Stop all robot's components
 	 */
 	public void shutdown(){
 		this.robotMotors.close();
 		this.robotSensors.close();
 	}
 	
+	
 	/**
-	 * Affiche de la distance entre le capteur de position et un obstacle sur le LCD
-	 * @param dist distance entre le capteur de position et un obstacle
-	 * @param x ligne sur l'écran
-	 * @param y colonne sur l'écran
-	 */
-	public static void lcd_print(Float dist,int x,int y){
-		LCD.drawString("distance est : "+dist, x, y); //$NON-NLS-1$
-	}
-
-	/**
-	 * 
+	 * Move robot. it manages the robot's movement  
 	 */
 	public void moveEight(){
 		float[] couleur = null;
@@ -146,7 +126,7 @@ public class Robot extends Thread {
 	}
 	
 	/**
-	 * 
+	 * Move robot. it manages the robot's movement  
 	 */
 	public void moveEight2(){
 		float[] couleur = null;
@@ -208,7 +188,7 @@ public class Robot extends Thread {
 	}
 	
 	/**
-	 * 
+	 * Move robot. it manages the robot's movement  
 	 */
 	public void followLine(){
 		float[] couleur = null;
@@ -255,7 +235,7 @@ public class Robot extends Thread {
 	}
 	
 	/**
-	 * Move robot 
+	 * Move robot. it manages the robot's movement  
 	 */
 	public void followLine2(){
 		float[] couleur = null;
@@ -300,7 +280,7 @@ public class Robot extends Thread {
 	}
 	
 	/**
-	 * determine the robot speed thanks to the color
+	 * determine the robot's speed thanks to the color
 	 * @param c
 	 * @return the speed of robot
 	 */
@@ -324,7 +304,7 @@ public class Robot extends Thread {
 	}
 	
 	/**
-	 * Move robot 
+	 * Move robot. it manages the robot's movement  
 	 */
 	public void lineFollowingMove(){
 		float dist;
@@ -343,7 +323,7 @@ public class Robot extends Thread {
 	
 	
 	/**
-	 * Move robot 
+	 * Move robot. it manages the robot's movement  
 	 */
 	public void lineFollowingMove2(){
 		float[] couleur = null;
@@ -451,7 +431,7 @@ public class Robot extends Thread {
 		int inStockageZone = 0;
 		int nearBoundary = 0;
 		
-
+		int a ;
 		int b = 0;
 		int k = 0;
 		
@@ -461,12 +441,15 @@ public class Robot extends Thread {
 		Stopwatch s = new Stopwatch();
 		
 		while (true){
+			a = 0;
 			b = 0;
 			k = 0;
 			if ( this.checkObstacle() ) {
 				try{
-					
-					if ( inStockageZone == 0){
+					this.semRightToCross.acquire();
+					if ( inStockageZone == 0 && this.rightToCross.getNum() == 0 ){
+						this.semRightToCross.release();
+						a++;
 						//getcolor
 						couleur = this.robotSensors.getColor();
 						Color c = Sensor.determineColor(couleur);
@@ -502,23 +485,26 @@ public class Robot extends Thread {
 							this.robotMotors.moveForward();
 						}
 					}
-					
+					if (a == 0) this.semRightToCross.release();
 					this.semRightToCross.acquire();
 					if ( this.rightToCross.getNum() == 1 && inStockageZone == 1){
 						this.semRightToCross.release();
 						b++;
 						s.reset();
 						if (nearBoundary == 1){
-							this.move(s, this.TIME_IN * 2);
+							this.move(s, this.TIME_IN);
 						}else{
-							this.move(s, this.TIME_IN * 3);
+							this.move(s, this.TIME_IN * 2);
 						}
 						
 						this.semRequestOut.acquire();
-						this.sendRequestOut.setNum(1);
+							this.sendRequestOut.setNum(1);
 						this.semRequestOut.release();
 						inStockageZone = 0;
-						nearBoundary = 0;					
+						nearBoundary = 0;
+						this.semRightToCross.acquire();
+							this.rightToCross.setNum(0);
+						this.semRightToCross.release();
 					}
 					if (b == 0) this.semRightToCross.release();
 					

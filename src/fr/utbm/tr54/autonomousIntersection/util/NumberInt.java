@@ -1,13 +1,13 @@
 package fr.utbm.tr54.autonomousIntersection.util;
 
 /**
- * @author Achille
  * Represents an integer. It will useful to use that class to share an integer between several threads
+ * @author Achille
  */
 public class NumberInt {
 	int num ;
 	/**
-	 * Defaul constructor, it initializes the number with 0
+	 * Default constructor, it initializes the number with 0
 	 */
 	public NumberInt(){
 		this.num = 0;

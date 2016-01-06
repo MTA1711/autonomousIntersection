@@ -1,8 +1,9 @@
 package fr.utbm.tr54.autonomousIntersection.sensor;
 
 /**
+ * Enum for color
  * @author Achille
- * Enum for color 
+ * 
  */
 public enum Color{BLACK, BLUE, WHITE, ORANGE, BLUE_BLACK ;
 	 @Override
