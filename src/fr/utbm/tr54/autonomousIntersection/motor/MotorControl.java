@@ -1,5 +1,6 @@
 package fr.utbm.tr54.autonomousIntersection.motor;
 
+import fr.utbm.tr54.autonomousIntersection.enums.Direction;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 import lejos.hardware.port.MotorPort;
 import lejos.utility.Delay;
@@ -10,8 +11,10 @@ import lejos.utility.Delay;
  * 
  */
 public class MotorControl {
-	private  EV3LargeRegulatedMotor motorC;
-	private  EV3LargeRegulatedMotor motorB;
+	private EV3LargeRegulatedMotor motorC;
+	private EV3LargeRegulatedMotor motorB;
+	private int leftDeviationNum = 0;
+	private int rightDeviationNum = 0;
 	
 	/**
 	 * Default constructor 
@@ -204,28 +207,63 @@ public class MotorControl {
 	 * move robot to the left
 	 */
 	public void goLeft(){
-		this.motorC.setSpeed(this.getMaxSpeedMotor() * 0.3f);
-		this.motorB.setSpeed(this.getMaxSpeedMotor() * 0.1f);
+		if(rightDeviationNum > 0) 
+			rightDeviationNum = 0;
 		
-		this.moveForward();
-		
-		Delay.msDelay( (300) );
-		
-		this.stop();
+		if(leftDeviationNum > 2) {
+			leftDeviationNum = 0;
+			steer(Direction.LEFT);
+		} else {
+			leftDeviationNum++;
+			this.motorC.setSpeed(this.getMaxSpeedMotor() * 0.3f);
+			this.motorB.setSpeed(this.getMaxSpeedMotor() * 0.1f);
+			
+			this.moveForward();
+			
+			Delay.msDelay(300);
+			
+			this.stop();
+		}
 	}
 	
 	/**
 	 * Move robot to the right
 	 */
 	public void goRight(){
-		this.motorB.setSpeed(this.getMaxSpeedMotor() * 0.1f);
-		this.motorC.setSpeed(0);
+		if(leftDeviationNum > 0) 
+			leftDeviationNum = 0;
 		
-		this.moveForward();
-		Delay.msDelay( (300) );
-		this.stop();
+		if(rightDeviationNum > 2) {
+			rightDeviationNum = 0;
+			steer(Direction.RIGHT);
+		} else {
+			rightDeviationNum++;
+			this.motorB.setSpeed(this.getMaxSpeedMotor() * 0.1f);
+			this.motorC.setSpeed(0);
+			
+			this.moveForward();
+			Delay.msDelay(300);
+			this.stop();			
+		}
 	}
 	
+	public void steer(Direction direction) {
+		int travelSpeed = (int) (this.getMaxSpeedMotor() * 0.4f);
+		this.motorB.setSpeed(travelSpeed);
+		this.motorC.setSpeed(travelSpeed);
+		switch (direction) {
+		case LEFT :
+			this.motorB.setSpeed(travelSpeed * 0.6f);
+			break;
+		case RIGHT :
+			this.motorC.setSpeed(travelSpeed * 0.6f);
+			break;
+		}
+		
+		this.moveForward();
+		Delay.msDelay(300);
+		this.stop();
+	}
 	/**
 	 * Return the average of tachometer
 	 */
